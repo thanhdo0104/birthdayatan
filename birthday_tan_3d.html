@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Tân 🎂</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #050309;
+    color: #f5e9ff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  canvas#bg, canvas#stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  .page { position: relative; z-index: 5; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+  .crown {
+    font-size: 3.2rem;
+    margin-bottom: 1rem;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+  .subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 0.4em;
+    color: #f0a8ff;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.2s;
+  }
+  .name-big {
+    font-size: clamp(3.6rem, 10vw, 7rem);
+    font-weight: 800;
+    background: conic-gradient(from 180deg, #ffce73, #ff7ad9, #8ad5ff, #ffce73);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.5s;
+  }
+  .tagline {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    color: #ffceff;
+    letter-spacing: 0.15em;
+    margin-top: 1rem;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.8s;
+  }
+  .gold-line {
+    width: 140px; height: 1px;
+    background: linear-gradient(90deg, transparent, #ffceff, transparent);
+    margin: 2rem auto;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.1s;
+  }
+  .wish-text {
+    max-width: 580px;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #d7c4ff;
+    font-style: italic;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.4s;
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: #9a80ff;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    animation: fadeUp 1s ease forwards 1.8s, bounce 2s ease-in-out infinite 2.8s;
+    opacity: 0;
+    text-transform: uppercase;
+  }
+  .scroll-arrow { width: 1px; height: 40px; background: linear-gradient(#9a80ff, transparent); }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* SECTION SHARED */
+  .section {
+    padding: 5rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.5em;
+    color: #9a80ff;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    text-align: center;
+    color: #ffe6ff;
+    margin-bottom: 0.8rem;
+  }
+  .section-divider {
+    width: 90px; height: 1px;
+    background: linear-gradient(90deg, transparent, #ffceff, transparent);
+    margin: 0 auto 3rem;
+  }
+
+  /* 3D GALLERY */
+  #gallery-scene {
+    width: 100%;
+    height: 480px;
+    position: relative;
+    perspective: 1200px;
+    cursor: grab;
+  }
+  #gallery-scene:active { cursor: grabbing; }
+  #gallery-ring {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+    transform: rotateY(0deg);
+  }
+  .gallery-card {
+    position: absolute;
+    width: 240px;
+    height: 320px;
+    top: 50%;
+    left: 50%;
+    margin: -160px -120px;
+    transform-style: preserve-3d;
+    background: radial-gradient(circle at top, rgba(255,255,255,0.07), rgba(6,3,20,0.95));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 12px;
+    box-shadow:
+      0 0 25px rgba(151, 108, 255, 0.3),
+      inset 0 0 25px rgba(0,0,0,0.7);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .gallery-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255,206,255,0.4), transparent 40%, rgba(138,213,255,0.4));
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.4;
+  }
+  .card-img-real {
+    width: 100%;
+    max-height: 100%;
+    object-fit: contain;      /* hiển thị đủ ảnh, không cắt */
+    background: #050309;      /* nền tối phía sau ảnh */
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    flex-shrink: 0;
+    display: block;
+  }
+  .card-caption {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #e8dbff;
+    letter-spacing: 0.05em;
+    font-style: italic;
+    flex-shrink: 0;
+  }
+  .drag-hint {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #b39bff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .gallery-nav {
+    display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;
+  }
+  .nav-btn {
+    background: radial-gradient(circle at top, #ffceff, #9a80ff);
+    border: none;
+    color: #120520;
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 18px rgba(255,206,255,0.5);
+  }
+  .nav-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    filter: brightness(1.1);
+    box-shadow: 0 0 26px rgba(140,197,255,0.7);
+  }
+
+  /* Responsive cho gallery trên màn hình nhỏ */
+  @media (max-width: 600px) {
+    #gallery-scene {
+      height: 360px;
+      perspective: 900px;
+    }
+    .gallery-card {
+      width: 190px;
+      height: 260px;
+      margin: -130px -95px;
+    }
+  }
+
+  /* VIDEO SECTION */
+  .video-layout {
+    display: grid;
+    grid-template-columns: minmax(0,2.5fr) minmax(0,1.2fr);
+    gap: 1.8rem;
+    align-items: flex-start;
+  }
+  @media (max-width: 800px) {
+    .video-layout { grid-template-columns: 1fr; }
+  }
+  .video-wrapper {
+    position: relative;
+    background: radial-gradient(circle at top, #2b1644, #060318);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.16);
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    box-shadow: 0 0 30px rgba(151,108,255,0.35);
+  }
+  .video-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top left, rgba(255,214,165,0.35), transparent 55%),
+      radial-gradient(circle at bottom right, rgba(151,108,255,0.4), transparent 55%);
+    mix-blend-mode: screen;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+  video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: inherit;
+  }
+
+  .video-list {
+    background: rgba(10,6,28,0.96);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 1rem;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .video-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #e9ddff;
+    font-size: 0.85rem;
+  }
+  .video-item:hover {
+    background: rgba(151,108,255,0.18);
+  }
+  .video-item.active {
+    background: rgba(255,206,255,0.25);
+    color: #120520;
+    font-weight: 600;
+  }
+  .video-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: radial-gradient(circle at top, #ffce73, #ff7ad9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    color: #120520;
+    flex-shrink: 0;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 4rem 2rem 3rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 5;
+    color: #a38fff;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .footer span.heart { color: #ff7ad9; }
+
+  /* LOGIN OVERLAY */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background:
+      radial-gradient(circle at top, rgba(255, 206, 255, 0.25), rgba(5, 3, 9, 0.98)),
+      radial-gradient(circle at bottom, rgba(151, 108, 255, 0.35), rgba(5, 3, 9, 1));
+    backdrop-filter: blur(12px);
+  }
+  .login-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .login-card {
+    max-width: 360px;
+    width: 100%;
+    background: rgba(10, 6, 28, 0.96);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 2rem 1.8rem 1.7rem;
+    box-shadow: 0 0 30px rgba(151, 108, 255, 0.45);
+  }
+  .login-title {
+    font-size: 1.2rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #ffe6ff;
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+  .login-sub {
+    font-size: 0.85rem;
+    color: #c7b5ff;
+    text-align: center;
+    margin-bottom: 1.4rem;
+  }
+  .login-input {
+    width: 100%;
+    background: rgba(5, 3, 15, 0.95);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.65rem 1rem;
+    color: #ffe6ff;
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .login-input::placeholder {
+    color: #7664b6;
+  }
+  .login-input:focus {
+    border-color: #ffceff;
+    box-shadow: 0 0 12px rgba(255, 206, 255, 0.6);
+  }
+  .login-btn {
+    margin-top: 1rem;
+    width: 100%;
+    border-radius: 999px;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    background: radial-gradient(circle at top, #ffce73, #ff7ad9);
+    color: #120520;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(255, 206, 255, 0.7);
+  }
+  .login-btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+  .login-error {
+    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    color: #ff8aa5;
+    text-align: center;
+    min-height: 1.1em;
+  }
+
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<canvas id="stars"></canvas>
+
+<!-- LOGIN GATE -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <h2 class="login-title">Welcome</h2>
+    <p class="login-sub">Đăng nhập để xem trang chúc mừng sinh nhật anh Tân.</p>
+    <form onsubmit="handleLogin(event)">
+      <input
+        id="login-username"
+        class="login-input"
+        type="text"
+        autocomplete="username"
+        placeholder="Tên đăng nhập "
+      />
+      <div style="height:0.4rem"></div>
+      <input
+        id="login-password"
+        class="login-input"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Mật khẩu"
+      />
+      <button class="login-btn" type="submit">Vào xem</button>
+      <p id="login-error" class="login-error"></p>
+    </form>
+  </div>
+</div>
+
+<div class="page" id="main-page" style="display:none">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="crown">👑</div>
+    <p class="subtitle">Happy Birthday</p>
+    <h1 class="name-big">Tân</h1>
+    <p class="tagline">Chúc mừng sinh nhật</p>
+    <div class="gold-line"></div>
+    <p class="wish-text">
+      Chúc anh Tân một ngày sinh nhật thật rực rỡ, tràn đầy niềm vui, tiếng cười và những khoảnh khắc ấm áp bên gia đình, bạn bè.
+      Mong mọi dự định của anh đều thành hiện thực.
+    </p>
+    <div class="scroll-hint">
+      <span>CUỘN XUỐNG</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="section">
+    <p class="section-label">KỶ NIỆM</p>
+    <h2 class="section-title">Không gian ảnh 3D</h2>
+    <div class="section-divider"></div>
+    <p class="drag-hint">✨ Kéo để xoay · Bộ sưu tập ảnh của anh Tân ✨</p>
+    <div id="gallery-scene">
+      <div id="gallery-ring"></div>
+    </div>
+    <div class="gallery-nav">
+      <button class="nav-btn" onclick="rotateGallery(-1)">⟵</button>
+      <button class="nav-btn" onclick="rotateGallery(1)">⟶</button>
+    </div>
+  </section>
+
+  <!-- VIDEO -->
+  <section class="section">
+    <p class="section-label">VIDEO</p>
+    <h2 class="section-title">Khoảnh khắc bằng video</h2>
+    <div class="section-divider"></div>
+
+    <div class="video-layout">
+      <div class="video-wrapper">
+        <video id="main-video" controls></video>
+      </div>
+      <div class="video-list" id="video-list">
+        <!-- JS sinh danh sách video -->
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Happy Birthday Anh Tân · <span class="heart">♥</span> Luôn tỏa sáng
+  </footer>
+</div>
+
+<script>
+// ===== LOGIN & ACCESS CONTROL =====
+const USERS = {
+  tannd88: '160388',
+  admin: 'thanhdo112004'
+};
+
+function handleLogin(event) {
+  event.preventDefault();
+  const userInput = document.getElementById('login-username');
+  const passInput = document.getElementById('login-password');
+  const errorEl = document.getElementById('login-error');
+
+  const name = (userInput.value || '').trim();
+  const pass = (passInput.value || '').trim();
+
+  if (!name || !pass) {
+    errorEl.textContent = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.';
+    return;
+  }
+
+  if (!USERS[name] || USERS[name] !== pass) {
+    errorEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu.';
+    passInput.value = '';
+    passInput.focus();
+    return;
+  }
+
+  // Ẩn màn hình đăng nhập, hiện trang chính
+  const overlay = document.getElementById('login-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 400);
+  const page = document.getElementById('main-page');
+  page.style.display = 'block';
+}
+
+// ===== BACKGROUND =====
+(function(){
+  const c = document.getElementById('bg');
+  const ctx = c.getContext('2d');
+  const s = document.getElementById('stars');
+  const sctx = s.getContext('2d');
+
+  function resize(){
+    c.width = s.width = window.innerWidth;
+    c.height = s.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // particles
+  const pts = [];
+  for(let i=0;i<60;i++){
+    pts.push({
+      x: Math.random()*c.width,
+      y: Math.random()*c.height,
+      vx: (Math.random()-0.5)*0.3,
+      vy: (Math.random()-0.5)*0.3,
+      r: Math.random()*2+0.5
+    });
+  }
+
+  // stars
+  const stars = [];
+  for(let i=0;i<180;i++){
+    stars.push({
+      x: Math.random()*s.width,
+      y: Math.random()*s.height,
+      r: Math.random()*1.2+0.2,
+      da: Math.random()*0.003+0.001,
+      phase: Math.random()*Math.PI*2
+    });
+  }
+
+  function draw(){
+    // bg
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=c.width;
+      if(p.x>c.width)p.x=0;
+      if(p.y<0)p.y=c.height;
+      if(p.y>c.height)p.y=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(180,140,255,0.18)';
+      ctx.fill();
+    });
+
+    // stars
+    sctx.clearRect(0,0,s.width,s.height);
+    const t = Date.now()/1000;
+    stars.forEach(st=>{
+      const a=0.3+0.5*Math.sin(t*st.da*10+st.phase);
+      sctx.beginPath();
+      sctx.arc(st.x,st.y,st.r,0,Math.PI*2);
+      sctx.fillStyle='rgba(255,230,255,'+a+')';
+      sctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== CONFIG ẢNH & VIDEO =====
+// 👉 CHỈNH LẠI TÊN FILE THEO THƯ MỤC CỦA BẠN
+//  - Đặt ảnh vào folder "images" (cùng chỗ với file html)
+//  - Đặt video vào folder "videos"
+
+const IMAGE_FILES = [
+    'z7624157943219_86f28e764e4f765e5bbaba527eacac7d.jpg',
+    'z7624157947801_abb0eb64afdbf4179901fcd7974ee75d.jpg',
+    'z7360516499074_cd4646bf9f960a35dcb94dfb9e1b00d7.jpg',
+    'z7624157951148_001f66c7a3c26fafa71eb243e9ab578d.jpg',
+    'z7624157952639_0c2d2760089c18dc5028a1c336b4a582.jpg',
+    'z7624157954247_291236d05ec8b27da7e3d21230ba2d6e.jpg',
+    'z7624175365890_9bcdb77d14941781d6cdb677905cf7ad.jpg',
+    'z7624175365973_657403e7f540ef74aaa8a8e0a93c7788.jpg',
+    'z7624175368115_09ce48c70a615b652c8578bab370d4b7.jpg',
+    'z7624175369824_2f3fdb65642f55243e02512fbf401c7b.jpg',
+    'z7624157953451_dbad248a1bc5cec2a1d13f6102615435.jpg',
+    'z7624183106715_4ad65b68cf95febe7b5063189d3fc1d2.jpg',
+    'z7624183216538_27321da45ba750bb938cbc09b4862235.jpg',
+    
+];
+
+const VIDEO_FILES = [
+  { src: '7624157953245.mp4',  label: 'Video kỷ niệm của anh Tân' },
+  { src: '7624157952774.mp4',  label: 'Video kỷ niệm của anh Tân' },
+ 
+];
+
+// ===== 3D GALLERY =====
+const CAPTIONS = [
+
+];
+
+const N = Math.max(IMAGE_FILES.length, 8);
+
+function getRadius() {
+  const w = window.innerWidth;
+  if (w < 480) return 260;
+  if (w < 768) return 340;
+  return 420;
+}
+
+let galleryImages = [];
+for(let i=0;i<N;i++){
+  galleryImages[i] = IMAGE_FILES[i] || IMAGE_FILES[IMAGE_FILES.length-1] || null;
+}
+
+const ring = document.getElementById('gallery-ring');
+let ringAngle = 0;
+let dragging = false;
+let lastX = 0;
+let velocity = 0;
+let spinInterval;
+let radius = getRadius();
+
+function buildGallery(){
+  ring.innerHTML = '';
+  for(let i=0;i<N;i++){
+    const angle=(i/N)*360;
+    const card=document.createElement('div');
+    card.className='gallery-card';
+    card.style.transform='rotateY('+angle+'deg) translateZ('+radius+'px)';
+
+    if(galleryImages[i]){
+      const img=document.createElement('img');
+      img.className='card-img-real';
+      img.src=galleryImages[i];
+      card.appendChild(img);
+    } else {
+      const ph=document.createElement('div');
+      ph.style.cssText='width:100%;aspect-ratio:4/3;border-radius:8px;border:1px dashed rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#8f7aff;font-size:0.8rem;';
+      ph.textContent='Chưa có ảnh';
+      card.appendChild(ph);
+    }
+
+    const cap=document.createElement('div');
+    cap.className='card-caption';
+    cap.textContent=CAPTIONS[i] || '';
+    card.appendChild(cap);
+
+    ring.appendChild(card);
+  }
+  ring.style.transform='rotateY('+ringAngle+'deg)';
+}
+buildGallery();
+
+const scene=document.getElementById('gallery-scene');
+scene.addEventListener('mousedown',e=>{
+  dragging=true; lastX=e.clientX; velocity=0; clearInterval(spinInterval);
+});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  const dx=e.clientX-lastX;
+  velocity=dx*0.3; ringAngle+=dx*0.25;
+  ring.style.transform='rotateY('+ringAngle+'deg)'; lastX=e.clientX;
+});
+window.addEventListener('mouseup',()=>{
+  if(!dragging)return; dragging=false;
+  spinInterval=setInterval(()=>{
+    ringAngle+=velocity; velocity*=0.95;
+    ring.style.transform='rotateY('+ringAngle+'deg)';
+    if(Math.abs(velocity)<0.05)clearInterval(spinInterval);
+  },16);
+});
+scene.addEventListener('touchstart',e=>{
+  dragging=true; lastX=e.touches[0].clientX; velocity=0; clearInterval(spinInterval);
+},{passive:true});
+window.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  const dx=e.touches[0].clientX-lastX;
+  velocity=dx*0.3; ringAngle+=dx*0.25;
+  ring.style.transform='rotateY('+ringAngle+'deg)'; lastX=e.touches[0].clientX;
+},{passive:true});
+window.addEventListener('touchend',()=>{dragging=false;});
+
+// cập nhật lại bán kính khi đổi kích thước màn hình
+window.addEventListener('resize', () => {
+  radius = getRadius();
+  buildGallery();
+});
+
+function rotateGallery(dir){
+  clearInterval(spinInterval);
+  const target=ringAngle+dir*(360/N);
+  let cur=ringAngle; const step=(target-cur)/20; let n=0;
+  spinInterval=setInterval(()=>{
+    cur+=step; n++;
+    ring.style.transform='rotateY('+cur+'deg)';
+    if(n>=20){ringAngle=target;clearInterval(spinInterval);}
+  },16);
+}
+
+// ===== VIDEO LIST =====
+(function initVideos(){
+  const listEl = document.getElementById('video-list');
+  const videoEl = document.getElementById('main-video');
+  if(!VIDEO_FILES.length){
+    listEl.textContent = 'Chưa cấu hình video. Hãy cập nhật mảng VIDEO_FILES trong mã.';
+    return;
+  }
+  VIDEO_FILES.forEach((v,idx)=>{
+    const item=document.createElement('div');
+    item.className='video-item'+(idx===0?' active':'');
+    item.dataset.index=idx;
+
+    const badge=document.createElement('div');
+    badge.className='video-badge';
+    badge.textContent=idx+1;
+
+    const label=document.createElement('div');
+    label.textContent=v.label || v.src;
+
+    item.appendChild(badge);
+    item.appendChild(label);
+
+    item.onclick=()=>{
+      document.querySelectorAll('.video-item').forEach(el=>el.classList.remove('active'));
+      item.classList.add('active');
+      videoEl.src = v.src;
+      videoEl.play().catch(()=>{});
+    };
+
+    listEl.appendChild(item);
+  });
+
+  // phát video đầu tiên
+  videoEl.src = VIDEO_FILES[0].src;
+})();
+</script>
+</body>
+</html>
